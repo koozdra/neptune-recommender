@@ -21,17 +21,30 @@ defmodule NeptuneRecommender.GremlinConsole do
     # IO.inspect(clean_query)
 
     # dimitri-test-cluster.cluster-ro-cbumrcbxuzww.us-west-2.neptune.amazonaws.com
-    {:ok, %{body: body}} =
+
+    response =
       HTTPoison.post(
-        "https://dimitri-test-cluster.cluster-cbumrcbxuzww.us-west-2.neptune.amazonaws.com:8182/gremlin",
+        "https://dimitri-test-cluster.cluster-ro-cbumrcbxuzww.us-west-2.neptune.amazonaws.com:8182/gremlin",
         "{\"gremlin\":\"#{clean_query}\"}",
         [],
         timeout: :infinity,
         recv_timeout: :infinity
       )
 
-    %{"result" => %{"data" => data}} = Jason.decode!(body)
-    data
+    case response do
+      {:ok, %{body: body}} ->
+        case Jason.decode!(body) do
+          %{"result" => %{"data" => data}} ->
+            {:ok, data}
+
+          result ->
+            IO.inspect(result)
+            {:error}
+        end
+
+      _ ->
+        {:error}
+    end
   end
 
   def get_petition_title(petition_id) do
@@ -60,7 +73,7 @@ defmodule NeptuneRecommender.GremlinConsole do
     g.V('petition_#{petition_id}').as('source_petition')
     .in('signed')
     .out('signed').where(neq('source_petition'))
-    .values('title')
+    .values('id')
     .timeLimit(1000)
     .groupCount()
     .order(local)
@@ -79,7 +92,7 @@ defmodule NeptuneRecommender.GremlinConsole do
     process_group_count_result(send_query(query))
   end
 
-  def recruits_petitions(user_id) do
+  def recruits_petitions(user_id, result_limit, time_limit) do
     query = """
     g.V()
     .match( 
@@ -87,16 +100,43 @@ defmodule NeptuneRecommender.GremlinConsole do
       __.as('recruiter').out('recruited').out('signed').as('recruitee_signed_petitions'),
       __.not(__.as('recruitee_signed_petitions').in('signed').hasId('user_#{user_id}'))
     )
-    .timeLimit(1000)
+    .timeLimit(#{time_limit})
     .select('recruitee_signed_petitions')
-    .values('title')
     .groupCount()
     .order(local)
       .by(values, desc)
-    .limit(local, 20)
+    .limit(local, #{result_limit})
     """
 
-    process_group_count_result(send_query(query))
+    case send_query(query) do
+      {:ok, result} ->
+        {:ok,
+         result
+         |> get_in(["@value"])
+         |> List.first()
+         |> get_in(["@value"])
+         |> Enum.chunk_every(2)
+         |> Enum.map(fn [
+                          %{
+                            "@value" => %{
+                              "id" => "petition_" <> petition_id,
+                              "properties" => %{"title" => title_props}
+                            }
+                          },
+                          %{"@value" => count}
+                        ] ->
+           title =
+             title_props
+             |> List.first()
+             |> get_in(["@value"])
+             |> get_in(["value"])
+
+           {count, petition_id, title}
+         end)}
+
+      _ ->
+        {:error}
+    end
   end
 
   def cosigner_petitions(user_id) do

@@ -7,7 +7,9 @@ defmodule NeptuneRecommender.Application do
 
   def start(_type, _args) do
     children = [
-      :poolboy.child_spec(:recommender_worker, poolboy_config())
+      NeptuneRecommender.ItemProvider,
+      NeptuneRecommender.WorkerSupervisor,
+      {NeptuneRecommender.Conductor, 20}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
