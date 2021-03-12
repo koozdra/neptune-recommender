@@ -5,7 +5,7 @@ defmodule NeptuneRecommender.ItemProvider do
 
   def start_link(_) do
     {:ok, cwd} = File.cwd()
-    file_stream = File.stream!("#{cwd}/lib/data/input")
+    file_stream = File.stream!("#{cwd}/lib/data/input_large")
     GenServer.start_link(__MODULE__, {file_stream, :listing}, name: @me)
   end
 

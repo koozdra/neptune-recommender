@@ -9,7 +9,7 @@ defmodule NeptuneRecommender.Application do
     children = [
       NeptuneRecommender.ItemProvider,
       NeptuneRecommender.WorkerSupervisor,
-      {NeptuneRecommender.Conductor, 20}
+      {NeptuneRecommender.Conductor, 1000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

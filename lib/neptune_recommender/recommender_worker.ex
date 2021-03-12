@@ -16,6 +16,9 @@ defmodule NeptuneRecommender.RecommenderWorker do
     NeptuneRecommender.ItemProvider.next_item() |> process_item()
   end
 
+  # https://elixirforum.com/t/genstage-unexpected-ssl-closed-message/9688/14
+  def handle_info({:ssl_closed, _msg}, state), do: {:noreply, state}
+
   defp process_item(nil) do
     NeptuneRecommender.Conductor.worker_done()
     {:noreply, nil}

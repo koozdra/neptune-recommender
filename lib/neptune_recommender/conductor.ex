@@ -19,7 +19,7 @@ defmodule NeptuneRecommender.Conductor do
   def handle_info(:start_processing, num_workers) do
     1..num_workers
     |> Enum.each(fn _ ->
-      :timer.sleep(100)
+      :timer.sleep(1000)
       NeptuneRecommender.WorkerSupervisor.add_worker()
     end)
 
