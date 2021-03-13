@@ -10,7 +10,7 @@ defmodule NeptuneRecommender.Application do
       NeptuneRecommender.Reporter,
       NeptuneRecommender.ItemProvider,
       NeptuneRecommender.WorkerSupervisor,
-      {NeptuneRecommender.Conductor, 20000}
+      {NeptuneRecommender.Conductor, 10000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

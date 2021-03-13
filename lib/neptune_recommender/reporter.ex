@@ -42,7 +42,7 @@ defmodule NeptuneRecommender.Reporter do
          start_date_time}
       ) do
     {:noreply,
-     {total_items_processed + 1, total_item_errors, time_span_processed + 1, recs_generated + 1,
+     {total_items_processed, total_item_errors, time_span_processed, recs_generated + 1,
       start_date_time}}
   end
 
