@@ -46,7 +46,7 @@ defmodule NeptuneRecommender do
           recommendations
           |> Enum.take(1)
           |> Enum.each(fn {num_matches, petition_id, title} ->
-            IO.puts("#{user_id}, #{petition_id}, #{title}")
+            # IO.puts("#{user_id}, #{petition_id}, #{title}")
             IO.binwrite(file, "#{user_id}, #{petition_id}\n")
           end)
         end).()

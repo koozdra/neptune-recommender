@@ -7,9 +7,10 @@ defmodule NeptuneRecommender.Application do
 
   def start(_type, _args) do
     children = [
+      NeptuneRecommender.Reporter,
       NeptuneRecommender.ItemProvider,
       NeptuneRecommender.WorkerSupervisor,
-      {NeptuneRecommender.Conductor, 1000}
+      {NeptuneRecommender.Conductor, 20000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

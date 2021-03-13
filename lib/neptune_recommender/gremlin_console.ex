@@ -93,15 +93,49 @@ defmodule NeptuneRecommender.GremlinConsole do
   end
 
   def recruits_petitions(user_id, result_limit, time_limit) do
+    # query = """
+    # g.V()
+    # .match( 
+    #   __.as('user').hasId('user_#{user_id}'),
+    #   __.as('user').out('recruited').out('signed').as('recruitee_signed_petitions'),
+    #   __.not(__.as('recruitee_signed_petitions').in('signed').hasId('user_#{user_id}'))
+    # )
+    # .timeLimit(#{time_limit})
+    # .select('recruitee_signed_petitions')
+    # .groupCount()
+    # .order(local)
+    #   .by(values, desc)
+    # .limit(local, #{result_limit})
+    # """
+
+    # query = """
+    # g.V()
+    # .match( 
+    #   __.as('user').hasId('user_#{user_id}'),
+    #   __.as('user').out('recruited').out('signed').as('recruitee_signed_petitions'),
+    #   __.not(__.as('recruitee_signed_petitions').in('signed').hasId('user_#{user_id}')),
+    #   __.as('user').in('recruited').out('signed').as('recruiters_signed_petitions'),
+    #   __.not(__.as('recruiters_signed_petitions').in('signed').hasId('user_#{user_id}'))
+    # )
+    # .timeLimit(#{time_limit})
+    # .select('recruitee_signed_petitions', 'recruiters_signed_petitions')
+    # .groupCount()
+    # .order(local)
+    #   .by(values, desc)
+    # .limit(local, #{result_limit})
+    # """
+
+    # .values('title')
+
     query = """
-    g.V()
-    .match( 
-      __.as('recruiter').hasId('user_#{user_id}'),
-      __.as('recruiter').out('recruited').out('signed').as('recruitee_signed_petitions'),
-      __.not(__.as('recruitee_signed_petitions').in('signed').hasId('user_#{user_id}'))
+    g
+    .V('user_#{user_id}')
+    .union(
+      __.out('recruited').out('signed'),
+      __.in('recruited').out('signed'),
+      __.in('recruited').out('recruited').out('signed')
     )
-    .timeLimit(#{time_limit})
-    .select('recruitee_signed_petitions')
+    .where(__.not(__.in('signed').hasId('user_#{user_id}')))
     .groupCount()
     .order(local)
       .by(values, desc)

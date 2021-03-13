@@ -18,10 +18,19 @@ defmodule NeptuneRecommender.Conductor do
 
   def handle_info(:start_processing, num_workers) do
     1..num_workers
-    |> Enum.each(fn _ ->
-      :timer.sleep(1000)
+    |> Enum.each(fn n ->
+      :timer.sleep(10)
+
+      if rem(n, 100) == 0 do
+        IO.puts("starting worker #{n}")
+      end
+
       NeptuneRecommender.WorkerSupervisor.add_worker()
     end)
+
+    IO.puts("")
+    IO.puts("ALL WORKERS STARTED")
+    IO.puts("")
 
     {:noreply, num_workers}
   end

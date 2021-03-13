@@ -25,27 +25,32 @@ defmodule NeptuneRecommender.RecommenderWorker do
   end
 
   defp process_item(user_id) do
-    IO.puts("Starting: #{user_id}")
+    # IO.puts("Starting: #{user_id}")
 
     case GremlinConsole.recruits_petitions(user_id, 1, 5) do
       {:ok, result} ->
         # IO.inspect(result)
 
         # IO.puts("finished: #{user_id}")
-        IO.puts("finished: #{user_id}")
+        # IO.puts("finished: #{user_id}")
 
         # {:ok, cwd} = File.cwd()
         # {:ok, file} = File.open("#{cwd}/lib/data/output", [:append])
 
+        NeptuneRecommender.Reporter.item_processed()
+
         result
         |> Enum.take(1)
         |> Enum.each(fn {num_matches, petition_id, title} ->
-          IO.puts("#{user_id}, #{petition_id}, #{title}")
+          nil
+          NeptuneRecommender.Reporter.recommendation_generated()
+          # IO.puts("#{user_id}, #{petition_id}, #{title}")
           # IO.binwrite(file, "#{user_id}, #{petition_id}\n")
         end)
 
       {:error} ->
-        IO.puts("ERRRROORRRRRRRR")
+        NeptuneRecommender.Reporter.item_error()
+        # IO.puts("ERRRROORRRRRRRR")
     end
 
     Process.send_after(self(), :process_item, 0)
