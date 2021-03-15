@@ -92,6 +92,65 @@ defmodule NeptuneRecommender.GremlinConsole do
     process_group_count_result(send_query(query))
   end
 
+  def connect_by_signatures(user_id, result_limit, time_limit) do
+    query = """
+    g
+    .V('user_#{user_id}')
+    .out('signed')
+    .in('signed')
+    .out('signed')
+    .where(__.not(__.in('signed').hasId('user_#{user_id}')))
+    .timeLimit(10)
+    .groupCount()
+    .order(local)
+      .by(values, desc)
+    .limit(local, #{result_limit})
+    """
+
+    case send_query(query) do
+      {:ok, result} ->
+        {:ok,
+         result
+         |> get_in(["@value"])
+         |> List.first()
+         |> get_in(["@value"])
+         |> Enum.chunk_every(2)
+         |> Enum.map(fn result ->
+           case result do
+             [
+               %{
+                 "@value" => %{
+                   "id" => "petition_" <> petition_id,
+                   "properties" => %{"title" => title_props}
+                 }
+               },
+               %{"@value" => count}
+             ] ->
+               title =
+                 title_props
+                 |> List.first()
+                 |> get_in(["@value"])
+                 |> get_in(["value"])
+
+               {count, petition_id, title}
+
+             [
+               %{
+                 "@value" => %{
+                   "id" => "petition_" <> petition_id
+                 }
+               },
+               %{"@value" => count}
+             ] ->
+               {count, petition_id, "no title"}
+           end
+         end)}
+
+      _ ->
+        {:error}
+    end
+  end
+
   def recruits_petitions(user_id, result_limit, time_limit) do
     # query = """
     # g.V()
