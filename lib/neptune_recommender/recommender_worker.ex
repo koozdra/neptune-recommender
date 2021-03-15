@@ -27,24 +27,13 @@ defmodule NeptuneRecommender.RecommenderWorker do
   defp process_item(user_id) do
     case GremlinConsole.recruits_petitions(user_id, 1, 5) do
       {:ok, []} ->
-        case GremlinConsole.connect_by_signatures(user_id, 1, 5) do
-          {:ok, result} ->
-            result
-            |> Enum.take(1)
-            |> Enum.each(fn {num_matches, petition_id, title} ->
-              # IO.puts("#{num_matches}, #{petition_id}, #{title}")
-              NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id)
-            end)
-
-          {:error} ->
-            NeptuneRecommender.Reporter.item_error(user_id)
-        end
+        fallback_query(user_id)
 
       {:ok, [{num_matches, petition_id, title}]} ->
         NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id)
 
       {:error} ->
-        NeptuneRecommender.Reporter.item_error(user_id)
+        fallback_query(user_id)
     end
 
     NeptuneRecommender.Reporter.item_processed()
@@ -52,6 +41,21 @@ defmodule NeptuneRecommender.RecommenderWorker do
     Process.send_after(self(), :process_item, 0)
 
     {:noreply, nil}
+  end
+
+  defp fallback_query(user_id) do
+    case GremlinConsole.connect_by_signatures(user_id, 1, 5) do
+      {:ok, result} ->
+        result
+        |> Enum.take(1)
+        |> Enum.each(fn {num_matches, petition_id, title} ->
+          # IO.puts("#{num_matches}, #{petition_id}, #{title}")
+          NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id)
+        end)
+
+      {:error} ->
+        NeptuneRecommender.Reporter.item_error(user_id)
+    end
   end
 
   # def handle_call({:recommend_petition, user_id}, _from, state) do
