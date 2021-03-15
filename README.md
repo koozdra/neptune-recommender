@@ -1,6 +1,8 @@
 # Neptune Recommender
 
+Read from `lib/data/input`. Have n number of concurrent workers generate recommendations untill file is processed.
+Write to `lib/data/output` and `lib/data/error` on results of recommendations.
+
 ```
 iex -S mix
-NeptuneRecommender.recommend
 ```
