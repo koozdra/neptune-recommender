@@ -127,6 +127,21 @@ defmodule NeptuneRecommender.GremlinConsole do
 
     # .values('title')
 
+    # query = """
+    # g
+    # .V('user_#{user_id}')
+    # .union(
+    #   __.out('recruited').out('signed'),
+    #   __.in('recruited').out('signed'),
+    #   __.in('recruited').out('recruited').out('signed')
+    # )
+    # .where(__.not(__.in('signed').hasId('user_#{user_id}')))
+    # .groupCount()
+    # .order(local)
+    #   .by(values, desc)
+    # .limit(local, #{result_limit})
+    # """
+
     query = """
     g
     .V('user_#{user_id}')

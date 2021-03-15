@@ -11,55 +11,65 @@ defmodule NeptuneRecommender.Reporter do
 
   def start_link(_) do
     {:ok, start_date_time} = DateTime.now("Etc/UTC")
-    GenServer.start_link(__MODULE__, {0, 0, 0, 0, start_date_time}, name: @me)
+    {:ok, cwd} = File.cwd()
+    {:ok, output_file} = File.open("#{cwd}/lib/data/output", [:append])
+    {:ok, error_file} = File.open("#{cwd}/lib/data/error", [:append])
+
+    GenServer.start_link(__MODULE__, {output_file, error_file, 0, 0, 0, 0, start_date_time},
+      name: @me
+    )
   end
 
   def item_processed() do
     GenServer.cast(@me, {:item_processed})
   end
 
-  def recommendation_generated() do
-    GenServer.cast(@me, {:recommendation_generated})
+  def recommendation_generated(user_id, petition_id) do
+    GenServer.cast(@me, {:recommendation_generated, user_id, petition_id})
   end
 
-  def item_error() do
-    GenServer.cast(@me, {:item_error})
+  def item_error(user_id) do
+    GenServer.cast(@me, {:item_error, user_id})
   end
 
   def handle_cast(
         {:item_processed},
-        {total_items_processed, total_item_errors, time_span_processed, recs_generated,
-         start_date_time}
+        {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+         recs_generated, start_date_time}
       ) do
     {:noreply,
-     {total_items_processed + 1, total_item_errors, time_span_processed + 1, recs_generated,
-      start_date_time}}
+     {output_file, error_file, total_items_processed + 1, total_item_errors,
+      time_span_processed + 1, recs_generated, start_date_time}}
   end
 
   def handle_cast(
-        {:recommendation_generated},
-        {total_items_processed, total_item_errors, time_span_processed, recs_generated,
-         start_date_time}
+        {:recommendation_generated, user_id, petition_id},
+        {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+         recs_generated, start_date_time}
       ) do
+    IO.binwrite(output_file, "#{user_id}, #{petition_id}\n")
+
     {:noreply,
-     {total_items_processed, total_item_errors, time_span_processed, recs_generated + 1,
-      start_date_time}}
+     {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+      recs_generated + 1, start_date_time}}
   end
 
   def handle_cast(
-        {:item_error},
-        {total_items_processed, total_item_errors, time_span_processed, recs_generated,
-         start_date_time}
+        {:item_error, user_id},
+        {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+         recs_generated, start_date_time}
       ) do
+    IO.binwrite(error_file, "#{user_id}\n")
+
     {:noreply,
-     {total_items_processed, total_item_errors + 1, time_span_processed, recs_generated,
-      start_date_time}}
+     {output_file, error_file, total_items_processed, total_item_errors + 1, time_span_processed,
+      recs_generated, start_date_time}}
   end
 
   def handle_info(
         :print_report,
-        {total_items_processed, total_item_errors, time_span_processed, recs_generated,
-         start_date_time} = state
+        {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+         recs_generated, start_date_time} = state
       ) do
     {:ok, current_date_time} = DateTime.now("Etc/UTC")
     diff_seconds = DateTime.diff(current_date_time, start_date_time)
@@ -75,8 +85,8 @@ defmodule NeptuneRecommender.Reporter do
 
   def handle_info(
         :print_minute_report,
-        {total_items_processed, total_item_errors, time_span_processed, recs_generated,
-         start_date_time} = state
+        {output_file, error_file, total_items_processed, total_item_errors, time_span_processed,
+         recs_generated, start_date_time} = state
       ) do
     IO.puts("")
     IO.puts(" processing #{time_span_processed} per minute")
@@ -84,6 +94,8 @@ defmodule NeptuneRecommender.Reporter do
 
     Process.send_after(self(), :print_minute_report, 60000)
 
-    {:noreply, {total_items_processed, total_item_errors, 0, recs_generated, start_date_time}}
+    {:noreply,
+     {output_file, error_file, total_items_processed, total_item_errors, 0, recs_generated,
+      start_date_time}}
   end
 end
