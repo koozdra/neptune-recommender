@@ -25,7 +25,7 @@ defmodule NeptuneRecommender.RecommenderWorker do
   end
 
   defp process_item(user_id) do
-    case GremlinConsole.recruits_petitions(user_id, 1, 5) do
+    case GremlinConsole.recruits_petitions(user_id, 1) do
       {:ok, []} ->
         fallback_query(user_id)
 
@@ -44,7 +44,7 @@ defmodule NeptuneRecommender.RecommenderWorker do
   end
 
   defp fallback_query(user_id) do
-    case GremlinConsole.connect_by_signatures(user_id, 1, 5) do
+    case GremlinConsole.connect_by_signatures(user_id, 1, 20) do
       {:ok, result} ->
         result
         |> Enum.take(1)
@@ -57,12 +57,4 @@ defmodule NeptuneRecommender.RecommenderWorker do
         NeptuneRecommender.Reporter.item_error(user_id)
     end
   end
-
-  # def handle_call({:recommend_petition, user_id}, _from, state) do
-  #   IO.puts("recommending #{user_id}")
-
-  #   result = GremlinConsole.recruits_petitions(user_id, 1, 5)
-
-  #   {:reply, {user_id, result}, state}
-  # end
 end

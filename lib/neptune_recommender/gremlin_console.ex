@@ -100,7 +100,7 @@ defmodule NeptuneRecommender.GremlinConsole do
     .in('signed')
     .out('signed')
     .where(__.not(__.in('signed').hasId('user_#{user_id}')))
-    .timeLimit(10)
+    .timeLimit(#{time_limit})
     .groupCount()
     .order(local)
       .by(values, desc)
@@ -151,7 +151,7 @@ defmodule NeptuneRecommender.GremlinConsole do
     end
   end
 
-  def recruits_petitions(user_id, result_limit, time_limit) do
+  def recruits_petitions(user_id, result_limit) do
     # query = """
     # g.V()
     # .match( 
