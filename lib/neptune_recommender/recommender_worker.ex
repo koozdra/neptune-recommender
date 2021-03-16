@@ -50,7 +50,7 @@ defmodule NeptuneRecommender.RecommenderWorker do
         |> Enum.take(1)
         |> Enum.each(fn {num_matches, petition_id, title} ->
           # IO.puts("#{num_matches}, #{petition_id}, #{title}")
-          NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id)
+          NeptuneRecommender.Reporter.recommendation_generated_sign(user_id, petition_id)
         end)
 
       {:error} ->
