@@ -56,7 +56,7 @@ defmodule NeptuneRecommender.Reporter do
          total_item_errors, time_span_processed, recs_generated, start_date_time}
       ) do
     IO.binwrite(output_file, "#{user_id}, #{petition_id}\n")
-    IO.binwrite(output_file_info, "#{user_id}, #{petition_id}, #{title}\n")
+    IO.binwrite(output_file_info, "#{user_id}, #{petition_id}, R, #{title}\n")
 
     {:noreply,
      {output_file, output_file_signs, output_file_info, error_file, total_items_processed,
@@ -69,7 +69,7 @@ defmodule NeptuneRecommender.Reporter do
          total_item_errors, time_span_processed, recs_generated, start_date_time}
       ) do
     IO.binwrite(output_file_signs, "#{user_id}, #{petition_id}\n")
-    IO.binwrite(output_file_info, "#{user_id}, #{petition_id}, #{title}\n")
+    IO.binwrite(output_file_info, "#{user_id}, #{petition_id}, S, #{title}\n")
 
     {:noreply,
      {output_file, output_file_signs, output_file_info, error_file, total_items_processed,
