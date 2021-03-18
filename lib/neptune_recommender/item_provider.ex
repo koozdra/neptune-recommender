@@ -31,14 +31,19 @@ defmodule NeptuneRecommender.ItemProvider do
   def handle_call({:next_item}, _from, {file_stream, :listing}) do
     items = Enum.take(file_stream, 1)
 
-    cond do
-      length(items) == 0 ->
+    case items do
+      [] ->
         {:reply, nil, {[], :complete}}
 
-      true ->
-        [item] = items
+      [item | _rest] ->
         file_stream = Enum.drop(file_stream, 1)
-        {:reply, String.trim(item), {file_stream, :listing}}
+
+        formatted_item =
+          item
+          |> String.trim()
+          |> String.replace(",", "")
+
+        {:reply, formatted_item, {file_stream, :listing}}
     end
   end
 end
