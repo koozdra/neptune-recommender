@@ -116,7 +116,16 @@ defmodule NeptuneRecommender.GremlinConsole do
          |> get_in(["@value"])
          |> Enum.chunk_every(2)
          |> Enum.map(fn result ->
-           case result do
+           process_result(result)
+         end)}
+
+      _ ->
+        {:error}
+    end
+  end
+
+  defp process_result(result) do
+    case result do
              [
                %{
                  "@value" => %{
@@ -144,11 +153,6 @@ defmodule NeptuneRecommender.GremlinConsole do
              ] ->
                {count, petition_id, "no title"}
            end
-         end)}
-
-      _ ->
-        {:error}
-    end
   end
 
   def recruits_petitions(user_id, result_limit) do
@@ -224,22 +228,8 @@ defmodule NeptuneRecommender.GremlinConsole do
          |> List.first()
          |> get_in(["@value"])
          |> Enum.chunk_every(2)
-         |> Enum.map(fn [
-                          %{
-                            "@value" => %{
-                              "id" => "petition_" <> petition_id,
-                              "properties" => %{"title" => title_props}
-                            }
-                          },
-                          %{"@value" => count}
-                        ] ->
-           title =
-             title_props
-             |> List.first()
-             |> get_in(["@value"])
-             |> get_in(["value"])
-
-           {count, petition_id, title}
+         |> Enum.map(fn result ->
+           process_result(result)
          end)}
 
       _ ->

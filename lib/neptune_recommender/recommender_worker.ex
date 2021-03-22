@@ -30,7 +30,7 @@ defmodule NeptuneRecommender.RecommenderWorker do
         fallback_query(user_id)
 
       {:ok, [{num_matches, petition_id, title} | _rest]} ->
-        NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id, title)
+        NeptuneRecommender.Reporter.recommendation_generated(user_id, petition_id, title, num_matches)
 
       {:error} ->
         fallback_query(user_id)
@@ -47,8 +47,9 @@ defmodule NeptuneRecommender.RecommenderWorker do
     case GremlinConsole.connect_by_signatures(user_id, 1, 20) do
       {:ok, [{num_matches, petition_id, title} | _rest]} ->
         # IO.puts("#{num_matches}, #{petition_id}, #{title}")
-        NeptuneRecommender.Reporter.recommendation_generated_sign(user_id, petition_id, title)
-
+        NeptuneRecommender.Reporter.recommendation_generated_sign(user_id, petition_id, title, num_matches)
+      {:ok, []} ->
+        NeptuneRecommender.Reporter.no_recommendation(user_id)
       {:error} ->
         NeptuneRecommender.Reporter.item_error(user_id)
     end
